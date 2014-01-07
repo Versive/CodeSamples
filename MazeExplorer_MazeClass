@@ -1,0 +1,205 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+
+namespace InClassThursNov21_01
+{
+    class Maze
+    {
+        //class attributes
+        private const int SIZE = 20;
+        private char[,] coords = new char[SIZE, SIZE];
+        private Random randNum = new Random();
+        private const int numMaps = 3; //total number of maps in the game
+        private const int levelIncrement = 5; //level-up difficulty increment
+        private int treasureFreq = 5; //lower treasureFreq will mean more treasures created
+        private int pointsToLevelUp = 20; //sets the number of points needed to get to the next level
+        public int score;
+        public int moves;
+        private int randomValue;
+        private int currentLevel;
+        
+        //constructor
+        public Maze(int level)
+        {
+            Load(level);
+        }
+
+        //load the level from a file
+        private void Load(int levelNum)
+        {
+            currentLevel = levelNum;
+            string fileName = "level" + levelNum + ".txt";
+            StreamReader reader = new StreamReader(fileName);
+            
+            for (int row = 0; row < SIZE; row++) //loop through the rows of the file
+            {
+                if (reader.EndOfStream) break; //error handling
+                
+                string line = reader.ReadLine();
+
+                for (int col = 0; col < SIZE; col++) //loop through every char in the line
+                {
+                    coords[col, row] = line[col];
+                }
+            }
+            reader.Close();
+        }
+
+        //draw the maze
+        public void Draw(Hero hero)
+        {
+            Header();
+            for (int row = 0; row < SIZE; row++)
+            {
+                for (int col = 0; col < SIZE; col++)
+                {
+                    if (hero.GetX() == col && hero.GetY() == row)
+                    {
+                        AddNewTreasure();
+
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        Console.Write("&");
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                    }
+                    else if (coords[col, row] == '$')
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.Write("$");
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                    }
+                    else { Console.Write(coords[col, row]); }
+                 }
+                
+                Console.WriteLine();
+            }
+
+            DisplayGameInfo();            
+            LevelUp(hero);
+        }
+
+        //deisplays the header
+        private void Header()
+        {
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("Treasure Hunter ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("L: " + currentLevel);
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        
+        //displays relevant game information
+        private void DisplayGameInfo()
+        {
+            //Console.ForegroundColor = ConsoleColor.Yellow;
+            //Console.WriteLine("Level: " + currentLevel);
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\tTreasure: $" + score);
+            Console.ForegroundColor = ConsoleColor.Gray; 
+        }
+
+        //check if a new treasure should spawn in a random spot
+        private void AddNewTreasure()
+        {
+            int numMoves = randNum.Next(0, treasureFreq);
+
+            int xCoord = randNum.Next(0, SIZE);
+            int yCoord = randNum.Next(0, SIZE);
+            
+            if (PointIsAlsoFree(xCoord, yCoord) && moves == (moves + numMoves))
+            {
+                coords[xCoord, yCoord] = '$';
+            }
+        }
+
+        //checks if it's time to move to a new maze
+        public void LevelUp(Hero hero)
+        {
+            if (currentLevel < numMaps && score >= pointsToLevelUp)
+            {
+                TripleTone(1);
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("Moving up a level... Press any key to continue");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                
+                currentLevel += 1;
+                treasureFreq += levelIncrement; //treasures spawn less frequently in the next level
+                pointsToLevelUp *= 2; //raise the points needed to move up in the next level
+                hero.ResetHero();
+                Load(currentLevel);
+            }
+            else if (currentLevel >= numMaps && score >= pointsToLevelUp)
+            {
+                Console.Clear();
+                Console.Write("You won in ");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write(moves);
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write(" moves with a final treasure value of ");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write(score);
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("!");
+                Console.Write("Press [Enter] to close the game... ");
+                TripleTone(3);
+                Console.ReadLine();
+                Environment.Exit(0);
+            }
+        }
+
+        private void TripleTone(int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                Console.Beep(1500, 150);
+                Console.Beep(1000, 150);
+                Console.Beep(1500, 150);
+            }
+        }
+
+        //returns true if x,y is in the grid, otherwise returns false
+        private Boolean PointInGrid(int x, int y)
+        {
+            if (x < 0 || x >= SIZE) return false;
+            if (y < 0 || y >= SIZE) return false;
+            return true;
+        }
+
+        //returns true if x,y is a valid position to move to
+        public Boolean PointIsFree(int x, int y)
+        {
+            if (!PointInGrid(x, y)) return false;
+            if (coords[x, y] == '*')
+            {
+                Console.Beep(370, 100);
+                return false;
+            }
+            if (coords[x, y] == '$')//checking to see if the player has moved onto a treasure
+            {
+                randomValue = randNum.Next(1, 6);//assigns a random value to the treasure
+                Console.Beep(32000, 100);
+                Console.Beep(32000, 100);
+                score += randomValue;
+                coords[x, y] = ' ';//clears the treasure once it's been collected
+            }
+            return true;
+        }
+        
+        public Boolean PointIsAlsoFree(int x, int y)
+        {
+            if (!PointInGrid(x, y)) return false;
+            if (coords[x, y] == '*')
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public int GetLevel() { return currentLevel; }
+        public int GetScore() { return score; }
+        public int GetMoves() { return moves; }
+    }
+}
