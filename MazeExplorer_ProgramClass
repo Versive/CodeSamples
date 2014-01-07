@@ -1,0 +1,58 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+
+namespace InClassThursNov21_01
+{
+    class Program
+    {
+        private Maze maze = new Maze(1);
+        public Hero curby = new Hero();
+
+        public void Play()
+        {
+            while (true)
+            {
+                    Console.Clear();
+                    maze.Draw(curby);
+
+                    MoveHero();
+            }
+        }
+
+        public void MoveHero()
+        {
+            ConsoleKeyInfo readKey = Console.ReadKey(true);
+            if (readKey.Key == ConsoleKey.RightArrow && maze.PointIsFree(curby.GetX() + 1, curby.GetY()))
+            { 
+                curby.MoveRight();
+                maze.moves += 1;
+            }
+            else if (readKey.Key == ConsoleKey.LeftArrow && maze.PointIsFree(curby.GetX() - 1, curby.GetY()))
+            { 
+                curby.MoveLeft();
+                maze.moves += 1;
+            }
+            else if (readKey.Key == ConsoleKey.UpArrow && maze.PointIsFree(curby.GetX(), curby.GetY() - 1))
+            { 
+                curby.MoveUp();
+                maze.moves += 1;
+            }
+            else if (readKey.Key == ConsoleKey.DownArrow && maze.PointIsFree(curby.GetX(), curby.GetY() + 1))
+            { 
+                curby.MoveDown();
+                maze.moves += 1;
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            Program thisProgram = new Program();
+            thisProgram.Play();
+            Console.ReadLine();
+        }
+    }
+}
