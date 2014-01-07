@@ -1,0 +1,39 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace InClassThursNov21_01
+{
+    
+    class Hero
+    {
+        //attributes
+        private int x = 0;
+        private int y = 0;
+
+        //constructor
+        public Hero() { }
+
+        //getters
+        public int GetX() { return x; }
+
+        public int GetY() { return y; }
+
+        //setters
+        public void MoveRight() { x += 1; }
+
+        public void MoveLeft() { x -= 1; }
+
+        public void MoveUp() { y -= 1; }
+
+        public void MoveDown() { y += 1; }
+
+        public void ResetHero()
+        {
+            x = 0;
+            y = 0;
+        }
+    }
+}
